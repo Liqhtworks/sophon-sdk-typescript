@@ -34,6 +34,11 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
+          # Scoped packages like @liqhtworks/sophon-sdk need the scope here
+          # so actions/setup-node writes the scoped registry mapping into
+          # .npmrc alongside the auth token. Without it, `npm publish`
+          # cannot resolve a registry for @liqhtworks and fails ENEEDAUTH.
+          scope: "@liqhtworks"
 
       - name: Verify tag matches package.json
         shell: bash
