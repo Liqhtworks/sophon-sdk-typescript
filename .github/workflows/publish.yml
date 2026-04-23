@@ -1,0 +1,56 @@
+name: Publish to npm
+
+# Fires when the sophon-api "Publish SDKs" workflow pushes a v<version> tag
+# into this repo. The tag commit already contains the fully-generated SDK;
+# this workflow installs, builds, and publishes to npm.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish (e.g. v0.1.0). Defaults to the current ref.
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verify tag matches package.json
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "${tag}" != "${pkg}" ]; then
+            echo "::error::tag v${tag} does not match package.json version ${pkg}" >&2
+            exit 1
+          fi
+
+      - name: Install + build
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
