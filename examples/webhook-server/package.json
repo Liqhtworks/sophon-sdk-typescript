@@ -1,0 +1,13 @@
+{
+  "name": "sophon-webhook-server-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.mjs",
+    "check": "node --check src/server.mjs"
+  },
+  "dependencies": {
+    "@liqhtworks/sophon-sdk": "latest",
+    "express": "^4.19.2"
+  }
+}
