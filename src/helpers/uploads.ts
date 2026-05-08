@@ -4,11 +4,15 @@
 // separate calls; this wrapper handles chunk slicing, bounded concurrency,
 // per-part retry, resume against existing sessions, and progress reporting.
 
+// Narrow structural type — only the fields the helper actually reads.
+// Keeping it tight lets the generated UploadsApi (which carries Date /
+// nullable / extra metadata fields) satisfy this interface without
+// explicit casts at the call site.
 export interface UploadsApiLike {
   createUpload(params: {
     createUploadRequest: { file_name: string; file_size: number; mime_type: string };
     idempotencyKey: string;
-  }): Promise<{ id: string; chunk_size: number; total_chunks: number; expires_at: string }>;
+  }): Promise<{ id: string; chunk_size: number; total_chunks: number }>;
 
   uploadPart(params: {
     id: string;
@@ -19,11 +23,10 @@ export interface UploadsApiLike {
   completeUpload(params: {
     id: string;
     idempotencyKey: string;
-  }): Promise<{ id: string; status: string; sha256: string; bytes: number }>;
+  }): Promise<{ id: string; sha256: string; bytes: number }>;
 
   getUpload(params: { id: string }): Promise<{
     id: string;
-    status: string;
     total_chunks: number;
     received_chunks: number[];
   }>;
