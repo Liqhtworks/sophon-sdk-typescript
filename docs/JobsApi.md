@@ -95,7 +95,7 @@ example().catch(console.error);
 
 Submit an encoding job
 
-Creates a queued encoding job from a completed upload source. The &#x60;profile&#x60; field accepts explicit coffee profiles or &#x60;sophon-auto&#x60;, and &#x60;output.target_height&#x60; can request aspect-preserving downscale. 
+Creates a queued encoding job from a completed upload source.  **Picking &#x60;profile&#x60;:** - Use &#x60;sophon-auto&#x60; unless you have a specific reason not to. It   picks per-source settings tuned for consistent output and   re-encodes at stricter settings if the first pass doesn\&#39;t   hold up. - Use an explicit coffee profile (&#x60;sophon-espresso&#x60; / &#x60;-cortado&#x60; /   &#x60;-americano&#x60;) when you want deterministic encoder behavior —   same settings regardless of source. - Use an &#x60;-hq&#x60; variant when the source is a heavy format   (ProRes, DNxHD, high-bitrate camera originals). Larger output   files, maximum detail preservation. - Use an &#x60;-hq-10bit&#x60; variant when the source is 10-bit and you   want to preserve that depth end-to-end (ProRes 422/4444,   DNxHD, BRAW, camera masters).  See &#x60;JobProfile&#x60; for the full enum.  &#x60;output.target_height&#x60; requests an aspect-preserving downscale (width derived from source, both dims rounded to even). If absent or larger than source, output uses source dimensions. 
 
 ### Example
 

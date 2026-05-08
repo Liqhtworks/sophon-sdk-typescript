@@ -94,13 +94,17 @@ export async function uploadFile(params: UploadFileParams): Promise<UploadFileRe
     // we only need the head size to slice, so use ceil.
     chunkSize = Math.ceil(source.size / totalChunks);
   } else {
+    // SOPHON scopes idempotency keys per-route. createUpload and
+    // completeUpload are different routes, so a single key on both
+    // returns 409. Derive distinct per-route keys from the caller's
+    // (or auto-generated) seed so retries still work.
     const session = await api.createUpload({
       createUploadRequest: {
         file_name: fileName,
         file_size: source.size,
         mime_type: mimeType,
       },
-      idempotencyKey,
+      idempotencyKey: `${idempotencyKey}/create`,
     });
     uploadId = session.id;
     chunkSize = session.chunk_size;
@@ -159,7 +163,10 @@ export async function uploadFile(params: UploadFileParams): Promise<UploadFileRe
 
   await Promise.all(workers);
 
-  const done = await api.completeUpload({ id: uploadId, idempotencyKey });
+  const done = await api.completeUpload({
+    id: uploadId,
+    idempotencyKey: `${idempotencyKey}/complete`,
+  });
 
   return { uploadId: done.id, sha256: done.sha256, bytes: done.bytes };
 }
