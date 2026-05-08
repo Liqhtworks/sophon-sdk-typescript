@@ -42,8 +42,16 @@ jobs:
 
       - name: Verify tag matches package.json
         shell: bash
+        env:
+          # `GITHUB_REF_NAME` is the *dispatched* ref (often `main`), not the
+          # checked-out tag. Prefer the explicit workflow_dispatch input,
+          # then fall back to GITHUB_REF_NAME for the tag-push trigger.
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
-          tag="${GITHUB_REF_NAME#v}"
+          tag="${INPUT_TAG#v}"
+          if [ -z "${tag}" ]; then
+            tag="${GITHUB_REF_NAME#v}"
+          fi
           pkg="$(node -p "require('./package.json').version")"
           if [ "${tag}" != "${pkg}" ]; then
             echo "::error::tag v${tag} does not match package.json version ${pkg}" >&2
