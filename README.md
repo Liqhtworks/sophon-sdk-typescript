@@ -1,164 +1,82 @@
-# @liqhtworks/sophon-sdk@0.1.0
+# @liqhtworks/sophon-sdk
 
-A TypeScript SDK client for the api.liqhtworks.xyz API.
+Official TypeScript SDK for the SOPHON Encoding API.
 
-## Usage
+This repository is generated from `Liqhtworks/sophon-api`. The curated
+`README.md` and `examples/` directory are preserved across SDK regeneration.
 
-First, install the SDK from npm.
+## Install
 
 ```bash
-npm install @liqhtworks/sophon-sdk --save
+npm install @liqhtworks/sophon-sdk
 ```
 
-Next, try it out.
+Requires Node 18+ or a runtime with `fetch`, `Blob`, `AbortController`, and Web
+Crypto.
 
+## Quick Start
 
 ```ts
 import {
   Configuration,
-  DownloadsApi,
-} from '@liqhtworks/sophon-sdk';
-import type { DownloadRequest } from '@liqhtworks/sophon-sdk';
+  UploadsApi,
+  uploadFile,
+} from "@liqhtworks/sophon-sdk";
+import { Blob } from "node:buffer";
+import { readFile } from "node:fs/promises";
 
-async function example() {
-  console.log("🚀 Testing @liqhtworks/sophon-sdk SDK...");
-  const api = new DownloadsApi();
+const config = new Configuration({
+  basePath: process.env.SOPHON_BASE_URL ?? "https://api.liqhtworks.xyz",
+  accessToken: process.env.SOPHON_API_KEY,
+});
 
-  const body = {
-    // string | HMAC-signed download token encoding the object key and expiry.
-    token: token_example,
-  } satisfies DownloadRequest;
+const uploads = new UploadsApi(config);
 
-  try {
-    const data = await api.download(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
+const bytes = await readFile("./source.mov");
+const source = new Blob([bytes], { type: "video/quicktime" });
 
-// Run the test
-example().catch(console.error);
+const upload = await uploadFile({
+  api: uploads,
+  source,
+  fileName: "source.mov",
+  mimeType: "video/quicktime",
+  concurrency: 4,
+  onProgress: (p) => console.log(`${p.partsDone}/${p.partsTotal} parts`),
+});
+
+console.log(upload.uploadId);
 ```
 
+For a standalone file-path upload recipe, see
+[`examples/upload-node-path.mjs`](./examples/upload-node-path.mjs).
 
-## Documentation
+## Webhooks
 
-### API Endpoints
+Use `verifyWebhookSignature` with the raw request body before JSON parsing.
 
-All URIs are relative to *https://api.liqhtworks.xyz*
+See [`examples/webhook-server`](./examples/webhook-server) for an Express
+handler that preserves the raw body, verifies `X-Turbo-Signature-256`, and only
+then parses JSON.
 
-| Class | Method | HTTP request | Description
-| ----- | ------ | ------------ | -------------
-*DownloadsApi* | [**download**](docs/DownloadsApi.md#download) | **GET** /v1/downloads/{token} | Download an output file via signed token
-*HealthApi* | [**healthz**](docs/HealthApi.md#healthz) | **GET** /healthz | Liveness probe
-*HealthApi* | [**readyz**](docs/HealthApi.md#readyz) | **GET** /readyz | Readiness probe
-*JobsApi* | [**cancelJob**](docs/JobsApi.md#canceljob) | **DELETE** /v1/jobs/{id} | Cancel a job
-*JobsApi* | [**createJob**](docs/JobsApi.md#createjoboperation) | **POST** /v1/jobs | Submit an encoding job
-*JobsApi* | [**getJob**](docs/JobsApi.md#getjob) | **GET** /v1/jobs/{id} | Get a single job by ID
-*JobsApi* | [**getJobOutput**](docs/JobsApi.md#getjoboutput) | **GET** /v1/jobs/{id}/output | Get the encoded output file
-*JobsApi* | [**listJobs**](docs/JobsApi.md#listjobs) | **GET** /v1/jobs | List jobs with cursor pagination
-*UploadsApi* | [**cancelUpload**](docs/UploadsApi.md#cancelupload) | **DELETE** /v1/uploads/{id} | Cancel an upload session
-*UploadsApi* | [**completeUpload**](docs/UploadsApi.md#completeupload) | **POST** /v1/uploads/{id}/complete | Finalize a chunked upload
-*UploadsApi* | [**createUpload**](docs/UploadsApi.md#createuploadoperation) | **POST** /v1/uploads | Initialize a chunked upload session
-*UploadsApi* | [**getUpload**](docs/UploadsApi.md#getupload) | **GET** /v1/uploads/{id} | Get upload session status
-*UploadsApi* | [**uploadPart**](docs/UploadsApi.md#uploadpart) | **PUT** /v1/uploads/{id}/parts/{part_number} | Upload a single chunk
-*WebhooksApi* | [**createWebhook**](docs/WebhooksApi.md#createwebhookoperation) | **POST** /v1/webhooks | Register a webhook endpoint
-*WebhooksApi* | [**deleteWebhook**](docs/WebhooksApi.md#deletewebhook) | **DELETE** /v1/webhooks/{id} | Soft-delete a webhook endpoint
-*WebhooksApi* | [**listWebhooks**](docs/WebhooksApi.md#listwebhooks) | **GET** /v1/webhooks | List active webhook endpoints
+## Helpers
 
+| Helper | Purpose |
+|---|---|
+| `uploadFile` | Chunked upload orchestration with bounded concurrency, retries, resume, and progress callbacks. |
+| `waitForJob` | Poll until terminal status with timeout and typed errors. |
+| `verifyWebhookSignature` | Constant-time HMAC verification plus replay-window enforcement. |
 
-### Models
+## API Docs
 
-- [CompleteUploadResponse](docs/CompleteUploadResponse.md)
-- [CreateJobOutputOptions](docs/CreateJobOutputOptions.md)
-- [CreateJobRequest](docs/CreateJobRequest.md)
-- [CreateUploadRequest](docs/CreateUploadRequest.md)
-- [CreateUploadResponse](docs/CreateUploadResponse.md)
-- [CreateWebhookRequest](docs/CreateWebhookRequest.md)
-- [ErrorBody](docs/ErrorBody.md)
-- [ErrorEnvelope](docs/ErrorEnvelope.md)
-- [JobOutputInfo](docs/JobOutputInfo.md)
-- [JobProfile](docs/JobProfile.md)
-- [JobProgress](docs/JobProgress.md)
-- [JobResponse](docs/JobResponse.md)
-- [JobSourceInfo](docs/JobSourceInfo.md)
-- [JobSourceType](docs/JobSourceType.md)
-- [JobStatus](docs/JobStatus.md)
-- [ListJobsResponse](docs/ListJobsResponse.md)
-- [OutputContainer](docs/OutputContainer.md)
-- [ReadyResponse](docs/ReadyResponse.md)
-- [UploadJobSource](docs/UploadJobSource.md)
-- [UploadPartResponse](docs/UploadPartResponse.md)
-- [UploadStatusResponse](docs/UploadStatusResponse.md)
-- [WebhookDeliveryPayload](docs/WebhookDeliveryPayload.md)
-- [WebhookListItem](docs/WebhookListItem.md)
-- [WebhookListResponse](docs/WebhookListResponse.md)
-- [WebhookResponse](docs/WebhookResponse.md)
-
-### Authorization
-
-
-Authentication schemes defined for the API:
-<a id="bearerApiKey"></a>
-#### bearerApiKey
-
-
-- **Type**: HTTP Bearer Token authentication
-<a id="sessionCookie"></a>
-#### sessionCookie
-
-
-- **Type**: API key
-- **API key parameter name**: `sophon_api_session`
-- **Location**: 
-
-## About
-
-This TypeScript SDK client supports the [Fetch API](https://fetch.spec.whatwg.org/)
-and is automatically generated by the
-[OpenAPI Generator](https://openapi-generator.tech) project:
-
-- API version: `1.0.0`
-- Package version: `0.1.0`
-- Generator version: `7.21.0`
-- Build package: `org.openapitools.codegen.languages.TypeScriptFetchClientCodegen`
-
-The generated npm module supports the following:
-
-- Environments
-  * Node.js
-  * Webpack
-  * Browserify
-- Language levels
-  * ES5 - you must have a Promises/A+ library installed
-  * ES6
-- Module systems
-  * CommonJS
-  * ES6 module system
-
-For more information, please visit [https://liqhtworks.xyz](https://liqhtworks.xyz)
+Generated endpoint/model docs live under [`docs/`](./docs).
 
 ## Development
-
-### Building
-
-To build the TypeScript source code, you need to have Node.js and npm installed.
-After cloning the repository, navigate to the project directory and run:
 
 ```bash
 npm install
 npm run build
 ```
 
-### Publishing
-
-Once you've built the package, you can publish it to npm:
-
-```bash
-npm publish
-```
-
 ## License
 
-[Proprietary]()
+Proprietary. See [`LICENSE`](./LICENSE).
