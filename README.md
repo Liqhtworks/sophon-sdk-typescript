@@ -77,6 +77,22 @@ npm install
 npm run build
 ```
 
+## Versioning
+
+`@liqhtworks/sophon-sdk` follows [SemVer](https://semver.org/), with one
+pre-1.0 caveat: while we are at `v0.x`, **minor bumps may include
+breaking changes**. Pin a tilde range until 1.0:
+
+```bash
+npm install @liqhtworks/sophon-sdk@~0.1
+```
+
+Patch releases (`0.1.x`) are always backward-compatible — they ship bug
+fixes, helper-layer improvements, and additive types. Once we cut
+`v1.0.0`, regular SemVer applies and breaking changes only land on
+major bumps. See [`CHANGELOG.md`](./CHANGELOG.md) for the per-release
+log.
+
 ## License
 
 Proprietary. See [`LICENSE`](./LICENSE).
