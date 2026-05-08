@@ -1,13 +1,15 @@
-name: Publish to npm
+name: TypeScript SDK CI
 
-# Fires when the sophon-api "Publish SDKs" workflow pushes a v<version> tag
-# into this repo. The tag commit already contains the fully-generated SDK;
-# this workflow installs, builds, and publishes to npm.
+# PRs and main pushes validate the generated package natively in the SDK repo.
+# v<version> tags additionally publish the already-generated SDK to npm.
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
+  pull_request:
   workflow_dispatch:
     inputs:
       tag:
@@ -19,8 +21,33 @@ permissions:
   id-token: write
 
 jobs:
+  validate:
+    name: install + build + pack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout package
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install + build
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          npm run build
+
+      - name: Validate npm package contents
+        run: npm pack --dry-run
+
   publish:
     name: npm publish
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tag
@@ -43,15 +70,11 @@ jobs:
       - name: Verify tag matches package.json
         shell: bash
         env:
-          # `GITHUB_REF_NAME` is the *dispatched* ref (often `main`), not the
-          # checked-out tag. Prefer the explicit workflow_dispatch input,
-          # then fall back to GITHUB_REF_NAME for the tag-push trigger.
           INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
-          tag="${INPUT_TAG#v}"
-          if [ -z "${tag}" ]; then
-            tag="${GITHUB_REF_NAME#v}"
-          fi
+          tag="${INPUT_TAG:-${GITHUB_REF_NAME}}"
+          tag="${tag#refs/tags/}"
+          tag="${tag#v}"
           pkg="$(node -p "require('./package.json').version")"
           if [ "${tag}" != "${pkg}" ]; then
             echo "::error::tag v${tag} does not match package.json version ${pkg}" >&2
@@ -60,7 +83,7 @@ jobs:
 
       - name: Install + build
         run: |
-          npm ci || npm install
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
           npm run build
 
       - name: Publish
