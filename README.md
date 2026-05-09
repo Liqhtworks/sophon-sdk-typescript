@@ -16,7 +16,7 @@ Crypto.
 
 ## Get an API key
 
-1. Sign in at <https://liqhtworks.xyz/account/general>.
+1. Sign in at <https://sophon.rs/account/general>.
 2. In **API keys**, create a key for your server-side integration.
 3. Copy the `xt_live_...` token when it is shown. It is only shown once.
 4. Store it as an environment variable:
