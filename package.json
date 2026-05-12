@@ -3,6 +3,7 @@
   "version": "0.1.5",
   "description": "OpenAPI client for @liqhtworks/sophon-sdk",
   "author": "OpenAPI-Generator",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Liqhtworks/sophon-sdk-typescript.git"
