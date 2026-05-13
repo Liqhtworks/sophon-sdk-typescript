@@ -1,5 +1,7 @@
 # @liqhtworks/sophon-sdk
 
+> **Alpha:** This SDK is in alpha. Please report any bugs or errors by opening an [issue](https://github.com/Liqhtworks/sophon-sdk-typescript/issues).
+
 Official TypeScript SDK for the SOPHON Encoding API.
 
 This repository is generated from `Liqhtworks/sophon-api`. The curated
@@ -18,11 +20,11 @@ Crypto.
 
 1. Sign in at <https://sophon.rs/account/general>.
 2. In **API keys**, create a key for your server-side integration.
-3. Copy the `xt_live_...` token when it is shown. It is only shown once.
+3. Copy the `sk_live_...` token when it is shown. It is only shown once.
 4. Store it as an environment variable:
 
 ```bash
-export SOPHON_API_KEY=xt_live_...
+export SOPHON_API_KEY=sk_live_...
 export SOPHON_BASE_URL=https://api.liqhtworks.xyz
 ```
 
