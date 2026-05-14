@@ -1,15 +1,48 @@
 {
   "name": "@liqhtworks/sophon-sdk",
   "version": "0.1.5",
-  "description": "OpenAPI client for @liqhtworks/sophon-sdk",
-  "author": "OpenAPI-Generator",
+  "description": "Official TypeScript SDK for the SOPHON Encoding API.",
+  "author": "Liqhtworks",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Liqhtworks/sophon-sdk-typescript.git"
+    "url": "git+https://github.com/Liqhtworks/sophon-sdk-typescript.git"
+  },
+  "homepage": "https://github.com/Liqhtworks/sophon-sdk-typescript#readme",
+  "bugs": {
+    "url": "https://github.com/Liqhtworks/sophon-sdk-typescript/issues"
+  },
+  "keywords": [
+    "sophon",
+    "liqhtworks",
+    "video",
+    "encoding",
+    "transcode",
+    "ffmpeg",
+    "openapi",
+    "sdk",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/esm/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",
@@ -19,6 +52,6 @@
     "typescript": "^4.0 || ^5.0"
   },
   "publishConfig": {
-    "registry": "https://github.com/Liqhtworks/sophon-sdk-typescript"
+    "access": "public"
   }
 }

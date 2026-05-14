@@ -39,9 +39,27 @@ export interface UploadProgress {
   partsTotal: number;
 }
 
+/**
+ * Acceptable upload sources. The helper coerces each one to a `Blob`
+ * internally so the rest of the chunking pipeline only deals with one shape.
+ *
+ *  - `Blob` — pass through (browser + Node 18+).
+ *  - `Uint8Array` (incl. Node `Buffer`) / `ArrayBuffer` — wrapped in a Blob.
+ *  - `string` — treated as a filesystem path (Node only). Read fully into memory.
+ *  - `{ path: string }` — same as string path, for explicit call sites.
+ *  - `{ data: Uint8Array | ArrayBuffer }` — explicit byte buffer.
+ */
+export type UploadSource =
+  | Blob
+  | Uint8Array
+  | ArrayBuffer
+  | string
+  | { path: string }
+  | { data: Uint8Array | ArrayBuffer };
+
 export interface UploadFileParams {
   api: UploadsApiLike;
-  source: Blob;
+  source: UploadSource;
   fileName: string;
   mimeType: string;
   /** Resume a prior session instead of creating a new one. */
@@ -68,7 +86,7 @@ export interface UploadFileResult {
 export async function uploadFile(params: UploadFileParams): Promise<UploadFileResult> {
   const {
     api,
-    source,
+    source: rawSource,
     fileName,
     mimeType,
     uploadId: resumeId,
@@ -79,6 +97,8 @@ export async function uploadFile(params: UploadFileParams): Promise<UploadFileRe
     onProgress,
     signal,
   } = params;
+
+  const source = await coerceUploadSource(rawSource, mimeType);
 
   if (concurrency < 1) throw new RangeError("concurrency must be >= 1");
   if (retries < 0) throw new RangeError("retries must be >= 0");
@@ -220,6 +240,56 @@ function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
     };
     signal?.addEventListener("abort", onAbort, { once: true });
   });
+}
+
+async function coerceUploadSource(source: UploadSource, mimeType: string): Promise<Blob> {
+  // Already a Blob (or File, which extends Blob). Pass through.
+  if (typeof Blob !== "undefined" && source instanceof Blob) return source;
+
+  if (source instanceof Uint8Array) {
+    return new Blob([source as BlobPart], { type: mimeType });
+  }
+  if (source instanceof ArrayBuffer) {
+    return new Blob([new Uint8Array(source) as BlobPart], { type: mimeType });
+  }
+  if (typeof source === "string") {
+    return await readPathToBlob(source, mimeType);
+  }
+  if (typeof source === "object" && source !== null) {
+    if ("path" in source && typeof source.path === "string") {
+      return await readPathToBlob(source.path, mimeType);
+    }
+    if ("data" in source) {
+      const d = source.data;
+      if (d instanceof Uint8Array) return new Blob([d as BlobPart], { type: mimeType });
+      if (d instanceof ArrayBuffer) return new Blob([new Uint8Array(d) as BlobPart], { type: mimeType });
+    }
+  }
+  throw new TypeError(
+    "uploadFile: source must be a Blob, Uint8Array, ArrayBuffer, file path, " +
+      "or { path } / { data } object",
+  );
+}
+
+async function readPathToBlob(path: string, mimeType: string): Promise<Blob> {
+  // Lazy-load `node:fs/promises` so this module stays usable in the browser.
+  // Browsers passing a string source will hit this error — which is the
+  // right behavior; they should pass a `File` or `Blob` instead.
+  let readFile: (p: string) => Promise<Uint8Array>;
+  try {
+    // Indirect import keeps the bundler from resolving node:fs/promises in a
+    // browser build, and the cast keeps us off @types/node here.
+    const dyn = new Function("m", "return import(m)") as (m: string) => Promise<any>;
+    const mod = await dyn("node:fs/promises");
+    readFile = mod.readFile as (p: string) => Promise<Uint8Array>;
+  } catch {
+    throw new TypeError(
+      "uploadFile: string sources are only supported in Node (node:fs/promises unavailable). " +
+        "Pass a Blob or Uint8Array instead.",
+    );
+  }
+  const bytes = await readFile(path);
+  return new Blob([bytes as BlobPart], { type: mimeType });
 }
 
 function randomIdempotencyKey(): string {
