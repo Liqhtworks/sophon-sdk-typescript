@@ -165,4 +165,4 @@ log.
 
 ## License
 
-Proprietary. See [`LICENSE`](./LICENSE).
+Apache License 2.0. See [`LICENSE`](./LICENSE).
