@@ -35,7 +35,7 @@ import { withTypedErrors } from "./errors";
 import { withRetry, withTimeout, type RetryOptions } from "./middleware";
 
 export interface SophonOptions extends Omit<ConfigurationParameters, "accessToken"> {
-  /** SOPHON API key (e.g. `xt_live_...` / `sk_live_...`). */
+  /** SOPHON API key (e.g. `xt_live_...`). */
   apiKey?: string;
   /** Pass through if you'd rather use the raw OAuth accessor. */
   accessToken?: ConfigurationParameters["accessToken"];
