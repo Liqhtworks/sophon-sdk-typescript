@@ -1,5 +1,7 @@
 # @liqhtworks/sophon-sdk
 
+> **Alpha:** This SDK is in alpha. Please report any bugs or errors by opening an [issue](https://github.com/Liqhtworks/sophon-sdk-typescript/issues).
+
 Official TypeScript SDK for the SOPHON Encoding API.
 
 This repository is generated from `Liqhtworks/sophon-api`. The curated
